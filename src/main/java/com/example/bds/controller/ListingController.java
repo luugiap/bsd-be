@@ -28,6 +28,7 @@ public class ListingController {
     // ================================================================
     private Users resolveUser(UserDetails principal) {
         System.out.println("aaaaa");
+        System.out.println("xxxxxx");
         return userRepository.findByUsername(principal.getUsername())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED, "Người dùng không tồn tại"));
