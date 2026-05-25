@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: bds
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 30s
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        connection:
+          useUnicode: true
+          characterEncoding: UTF-8
+          charSet: UTF-8
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIl_USER}
+    password: ${GMAIl_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+security:
+  jwt:
+    secret: ${SECRET_KEY}
+
+app:
+  otp:
+    expire-minutes: 5
+    max-failed-attempts: 5
+rate:
+  limit:
+    capacity: 12
+    refillToken: 2
+    refillTokenMillis: 10
+aws:
+  region: ap-southeast-1
+  accessKeyId: key
+  secretAccesskey: secret
+
