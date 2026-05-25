@@ -27,6 +27,7 @@ public class ListingController {
     //  Helper: lấy Users entity từ principal (username)
     // ================================================================
     private Users resolveUser(UserDetails principal) {
+        System.out.println("aaaaa");
         return userRepository.findByUsername(principal.getUsername())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED, "Người dùng không tồn tại"));
