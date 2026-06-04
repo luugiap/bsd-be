@@ -30,9 +30,12 @@ public class ListingResponse {
     private BigDecimal pricePerM2;
 
     // Location
-    private String province;
-    private String district;
-    private String ward;
+    private String provinceCode;
+    private String provinceName;
+    private String districtCode;
+    private String districtName;
+    private String wardCode;
+    private String wardName;
     private String addressDetail;
 
     // Detail (chỉ 1 trong số này có data tuỳ propertyType)

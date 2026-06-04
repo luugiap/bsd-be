@@ -55,7 +55,7 @@ public class UserController {
     @PostMapping("/step1")
     public CompletableFuture<ResponseEntity<String>> registStep1(@RequestBody  RegisterRequest registerRequest,  HttpServletRequest httpServletRequest)  {
 
-        if(userRepository.findByUsername(registerRequest.getUsername()).isPresent() && userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
+        if(userRepository.findByUsername(registerRequest.getUsername()).isPresent() && userRepository.findByEmail(registerRequest.getEmail1()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "thông tin người dùng đã bị trùng");
         }
         if(!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
@@ -70,7 +70,7 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,"TOO_MANY_REQUESTS");
 
         }
-        return userServices.register(registerRequest.getUsername(), registerRequest.getPassword(),  registerRequest.getEmail());
+        return userServices.register(registerRequest.getUsername(), registerRequest.getPassword(),  registerRequest.getEmail1());
 
     }
     @PostMapping("forgotPasswordStep")

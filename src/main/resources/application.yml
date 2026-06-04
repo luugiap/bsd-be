@@ -56,3 +56,10 @@ aws:
   accessKeyId: key
   secretAccesskey: secret
 
+# ============================================================
+#  Location API (provinces.open-api.vn)
+#  Dữ liệu tỉnh/huyện/xã được lấy từ API này và cache Redis
+# ============================================================
+location:
+  api:
+    base-url: https://provinces.open-api.vn/api

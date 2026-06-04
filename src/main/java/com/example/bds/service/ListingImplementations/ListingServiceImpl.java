@@ -4,20 +4,17 @@ import com.example.bds.config.exception.AppException;
 import com.example.bds.config.exception.ErrorCode;
 import com.example.bds.dto.Request.Listing.*;
 import com.example.bds.dto.Response.Listing.ListingResponse;
+import com.example.bds.dto.external.LocationDto;
 import com.example.bds.entity.listing.*;
 import com.example.bds.entity.listing.detail.*;
-import com.example.bds.entity.location.District;
-import com.example.bds.entity.location.Province;
-import com.example.bds.entity.location.Ward;
 import com.example.bds.entity.rbac.Users;
 import com.example.bds.repository.*;
+import com.example.bds.service.LocationApiService;
 import com.example.bds.service.interfaces.Listing.ListingTypeValidator;
 import com.example.bds.service.interfaces.Listing.OwnerListingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,11 +25,7 @@ public class ListingServiceImpl implements OwnerListingService {
 
     private final ListingRepository listingRepository;
     private final ListingValidatorRegistry validatorRegistry;
-
-    // Location repositories
-    private final ProvinceRepository provinceRepository;
-    private final DistrictRepository districtRepository;
-    private final WardRepository     wardRepository;
+    private final LocationApiService locationApiService;
 
     // =========================================================
     //  CREATE APARTMENT
@@ -235,7 +228,8 @@ public class ListingServiceImpl implements OwnerListingService {
 
     /**
      * Build phần base của Listing (chung cho tất cả loại).
-     * Validate địa chỉ và tính pricePerM2.
+     * Validate địa chỉ qua external API (provinces.open-api.vn) + Redis cache.
+     * Tính pricePerM2 nếu đủ dữ liệu.
      */
     private Listing buildBaseListing(
             Users owner,
@@ -247,18 +241,22 @@ public class ListingServiceImpl implements OwnerListingService {
             String provinceCode, String districtCode, String wardCode,
             String addressDetail) {
 
-        Province province = provinceRepository.findByCode(provinceCode)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy tỉnh/thành: " + provinceCode));
-        District district = districtRepository.findByCode(districtCode)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy quận/huyện: " + districtCode));
-        Ward ward = wardRepository.findByCode(wardCode)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy phường/xã: " + wardCode));
+        // 1. Lấy thông tin địa chỉ từ external API (có cache Redis)
+        LocationDto.ProvinceDto province = locationApiService.getProvince(provinceCode);
+        LocationDto.DistrictDto district = locationApiService.getDistrict(districtCode);
+        LocationDto.WardDto     ward     = locationApiService.getWard(wardCode);
 
-        // Kiểm tra tính nhất quán địa chỉ
-        if (!district.getProvince().equals(province) || !ward.getDistrict().equals(district)) {
-            throw new AppException(ErrorCode.VALIDATION_ERROR, "Địa chỉ không nhất quán (tỉnh/huyện/xã không khớp)");
+        // 2. Kiểm tra tính nhất quán: district phải thuộc province, ward phải thuộc district
+        if (!provinceCode.equals(district.getProvinceCode())) {
+            throw new AppException(ErrorCode.VALIDATION_ERROR,
+                    "Quận/huyện '" + district.getName() + "' không thuộc tỉnh/thành '" + province.getName() + "'");
+        }
+        if (!districtCode.equals(ward.getDistrictCode())) {
+            throw new AppException(ErrorCode.VALIDATION_ERROR,
+                    "Phường/xã '" + ward.getName() + "' không thuộc quận/huyện '" + district.getName() + "'");
         }
 
+        // 3. Build entity
         Listing listing = new Listing();
         listing.setUser(owner);
         listing.setPropertyType(propertyType);
@@ -269,13 +267,18 @@ public class ListingServiceImpl implements OwnerListingService {
         listing.setArea(area);
         listing.setLegalStatus(legalStatus);
         listing.setInteriorStatus(interiorStatus);
-        listing.setProvince(province);
-        listing.setDistrict(district);
-        listing.setWard(ward);
+
+        // Lưu cả code lẫn tên (không cần FK vào bảng location)
+        listing.setProvinceCode(province.getCode());
+        listing.setProvinceName(province.getName());
+        listing.setDistrictCode(district.getCode());
+        listing.setDistrictName(district.getName());
+        listing.setWardCode(ward.getCode());
+        listing.setWardName(ward.getName());
         listing.setAddressDetail(addressDetail);
         listing.setStatus(ListingStatus.PENDING);
 
-        // Tính price/m2 nếu đủ dữ liệu
+        // 4. Tính price/m2 nếu đủ dữ liệu
         if (price != null && area != null && area.compareTo(BigDecimal.ZERO) > 0) {
             listing.setPricePerM2(price.divide(area, 2, RoundingMode.HALF_UP));
         }
@@ -294,9 +297,12 @@ public class ListingServiceImpl implements OwnerListingService {
                 .price(listing.getPrice())
                 .area(listing.getArea())
                 .pricePerM2(listing.getPricePerM2())
-                .province(listing.getProvince() != null ? listing.getProvince().getCode() : null)
-                .district(listing.getDistrict() != null ? listing.getDistrict().getCode() : null)
-                .ward(listing.getWard() != null ? listing.getWard().getCode() : null)
+                .provinceCode(listing.getProvinceCode())
+                .provinceName(listing.getProvinceName())
+                .districtCode(listing.getDistrictCode())
+                .districtName(listing.getDistrictName())
+                .wardCode(listing.getWardCode())
+                .wardName(listing.getWardName())
                 .addressDetail(listing.getAddressDetail())
                 .build();
     }

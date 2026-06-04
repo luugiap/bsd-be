@@ -2,9 +2,6 @@ package com.example.bds.entity.listing;
 
 import com.example.bds.entity.BasedEntity;
 import com.example.bds.entity.listing.detail.*;
-import com.example.bds.entity.location.District;
-import com.example.bds.entity.location.Province;
-import com.example.bds.entity.location.Ward;
 import com.example.bds.entity.rbac.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -77,17 +74,29 @@ public class Listing extends BasedEntity {
     private InteriorStatus interiorStatus;
 
     // ================= LOCATION =================
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "province_code")
-    private Province province;
+    /** Mã tỉnh/thành (lấy từ external API, không FK vào DB) */
+    @Column(name = "province_code", length = 20)
+    private String provinceCode;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "district_code")
-    private District district;
+    /** Tên tỉnh/thành */
+    @Column(name = "province_name", length = 100)
+    private String provinceName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ward_code")
-    private Ward ward;
+    /** Mã quận/huyện */
+    @Column(name = "district_code", length = 20)
+    private String districtCode;
+
+    /** Tên quận/huyện */
+    @Column(name = "district_name", length = 100)
+    private String districtName;
+
+    /** Mã phường/xã */
+    @Column(name = "ward_code", length = 20)
+    private String wardCode;
+
+    /** Tên phường/xã */
+    @Column(name = "ward_name", length = 100)
+    private String wardName;
 
     @Column(name = "address_detail", length = 255)
     private String addressDetail;

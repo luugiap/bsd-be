@@ -4,10 +4,7 @@ import com.example.bds.entity.BasedEntity;
 import com.example.bds.entity.BlacklistToken;
 import com.example.bds.entity.listing.Listing;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 import java.util.Set;
@@ -66,9 +63,11 @@ public class Users extends BasedEntity {
     private Set<Roles> roles;
 
 
+    @Builder.Default
     @OneToMany(mappedBy = "user")
-    private List<Listing> listings;
+    private List<Listing> listings = new java.util.ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user")
-    private List<BlacklistToken> blacklistTokens;
+    private List<BlacklistToken> blacklistTokens = new java.util.ArrayList<>();
 }
