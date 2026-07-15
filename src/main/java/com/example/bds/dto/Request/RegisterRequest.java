@@ -19,7 +19,7 @@ public class RegisterRequest {
     private String email1;
 
     @NotBlank(message = "otp khong duoc bo trong")
-    @Pattern(regexp = "//d{6}", message = "otp phai la nhung con so")
+    @Pattern(regexp = "\\d{6}", message = "otp phai la nhung con so")
     private String otp;
 
     @NotBlank

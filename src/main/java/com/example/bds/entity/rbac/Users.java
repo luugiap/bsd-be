@@ -36,10 +36,12 @@ public class Users extends BasedEntity {
     private String imageUrl;
 
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "account_status", nullable = false, length = 20)
     private AccountStatus status = AccountStatus.ACTIVE;
 
+    @Builder.Default
     @Column(name = "is_verified", nullable = false)
     private Boolean verified = false;
 

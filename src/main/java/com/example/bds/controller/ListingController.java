@@ -3,6 +3,7 @@ package com.example.bds.controller;
 import com.example.bds.dto.Request.Listing.*;
 import com.example.bds.dto.Response.ApiResponse;
 import com.example.bds.dto.Response.Listing.ListingResponse;
+import com.example.bds.dto.Response.Listing.PagedListingResponse;
 import com.example.bds.entity.rbac.Users;
 import com.example.bds.repository.UserRepository;
 import com.example.bds.service.interfaces.Listing.OwnerListingService;
@@ -106,6 +107,24 @@ public class ListingController {
     //  POST /api/v1/listing/mini-room
     //  Tạo tin rao phòng trọ / nhà trọ mini
     // ================================================================
+    // ================================================================
+    //  GET /api/v1/listing/search
+    //  Tìm kiếm bài đăng. Nếu không có kết quả → fallback trả về tất cả
+    // ================================================================
+    @GetMapping("/search")
+    public ResponseEntity<PagedListingResponse> search(
+            @RequestParam String text,
+            @RequestParam(required = false) String provinceCode,
+            @RequestParam(required = false) String districtCode,
+            @RequestParam(required = false) String wardCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        PagedListingResponse response = ownerListingService.search(
+                text, provinceCode, districtCode, wardCode, page, size);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/mini-room")
     public ResponseEntity<ApiResponse<ListingResponse>> createMiniRoom(
             @AuthenticationPrincipal UserDetails principal,

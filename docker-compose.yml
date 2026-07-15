@@ -21,6 +21,19 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes
 
+  bds-be:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bds-be-v1
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - /opt/global:/opt/global/
+    mem_limit: 1G
+    restart: always
 volumes:
   mysql_data:
   redis_data:

@@ -4,7 +4,6 @@ import com.example.bds.entity.BasedEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -25,8 +24,6 @@ public class Property extends BasedEntity {
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "property")
-    private List<Listing> listings;
 
 
 

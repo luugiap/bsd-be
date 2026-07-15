@@ -103,9 +103,8 @@ public class UserServices {
         Users user = new Users();
         try{
             if(otpServices.verified(registerRequest.getEmail1(), registerRequest.getOtp())) {
-//                user.setUsername(registerRequest.getUsername());
-//                user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
                 user = userMapper.toEntity(registerRequest);
+                user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
                 Roles roles = roleRepository.findByRoleName("ROLE_USER");
                 Set<Roles> roleSet = new HashSet<>();
                 roleSet.add(roles);

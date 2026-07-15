@@ -4,6 +4,8 @@ import com.example.bds.config.exception.AppException;
 import com.example.bds.config.exception.ErrorCode;
 import com.example.bds.dto.Request.Listing.*;
 import com.example.bds.dto.Response.Listing.ListingResponse;
+import com.example.bds.dto.Response.Listing.PageMetadata;
+import com.example.bds.dto.Response.Listing.PagedListingResponse;
 import com.example.bds.dto.external.LocationDto;
 import com.example.bds.entity.listing.*;
 import com.example.bds.entity.listing.detail.*;
@@ -16,8 +18,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -220,6 +226,40 @@ public class ListingServiceImpl implements OwnerListingService {
         listingRepository.save(listing);
 
         return toResponse(listing);
+    }
+
+    // =========================================================
+    //  SEARCH WITH FALLBACK
+    // =========================================================
+    @Override
+    public PagedListingResponse search(String text, String provinceCode, String districtCode,
+                                       String wardCode, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+
+        Page<Listing> result = listingRepository.searchListings(
+                text,
+                provinceCode == null || provinceCode.isBlank() ? null : provinceCode,
+                districtCode == null || districtCode.isBlank() ? null : districtCode,
+                wardCode     == null || wardCode.isBlank()     ? null : wardCode,
+                pageable
+        );
+
+        boolean fallback = result.isEmpty();
+        String message;
+
+        if (fallback) {
+            result = listingRepository.findAllByStatus(ListingStatus.APPROVED, pageable);
+            message = "Không tìm thấy kết quả phù hợp, đây là các bài đăng có thể hữu ích cho bạn";
+        } else {
+            message = "Tìm kiếm thành công";
+        }
+
+        List<ListingResponse> content = result.getContent().stream()
+                .map(this::toResponse)
+                .toList();
+
+        PageMetadata metadata = new PageMetadata(page, size, result.getTotalElements(), fallback);
+        return new PagedListingResponse(200, message, content, metadata);
     }
 
     // =========================================================
